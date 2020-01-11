@@ -4,11 +4,12 @@ import { Icon } from 'react-native-elements';
 import { observer, useLocalStore } from 'mobx-react';
 import DocumentPicker from 'react-native-document-picker';
 import { stat } from 'react-native-fs';
-import MusicControl from 'react-native-music-control';
+// import MusicControl from 'react-native-music-control';
 
 import TimeSeekerInput from './TimeSeekerInput';
-import { PLAYER_STATES } from '../models/playerStates';
 import StoresContext from '../contexts/storesContext';
+import { useMediaControlNotification as _useMediaControlNotification } from '../hooks/mediaControlNotificationHooks';
+import { PLAYER_STATES } from '../models/playerStates';
 import { AudioPlayerStore } from '../stores/audioPlayerStore';
 
 // All units in milliseconds
@@ -88,9 +89,9 @@ function AudioPlayer() {
     await selectFile(state, playerStore);
   };
 
-  const onPlayPauseBtnClicked = async () => { 
+  const onPlayPauseBtnClicked = useCallback(async () => { 
     await playerStore.playPause();
-  };
+  }, []);
 
   const onSeekerValueChange = async (milliseconds: number) => {
     const shouldChangeSeekingFlag = !state.isSeeking;
@@ -104,18 +105,20 @@ function AudioPlayer() {
 
   const onSeekerSlidingComplete = (milliseconds: number) => state.setIsSeeking(false);
 
-  const onRelativeSeek = async (millisecondDelta: number) => {
+  const onRelativeSeek = useCallback(async (millisecondDelta: number) => {
     await playerStore.relativeSeek(millisecondDelta);
-  };
+  }, []);
 
   //// SETUP EFFECTS ////
 
-  useUpdateTimeEffect(state, playerStore);
-  useInitMediaNotificationEffect(onPlayPauseBtnClicked, onRelativeSeek);
+  useUpdateTime(state, playerStore);
+  useMediaControlNotification(state, playerStore, onPlayPauseBtnClicked, onRelativeSeek);
+
+  // useInitMediaNotificationEffect(onPlayPauseBtnClicked, onRelativeSeek);
 
   //// RENDERING ////
 
-  updateMediaNotification(state, playerStore);
+  // updateMediaNotification(state, playerStore);
 
   const trackLength = (playerStore.isLoaded) ? playerStore.player.duration : 0;
   const playPauseBtnIconName = (playerStore.isLoaded && playerStore.playerState === PLAYER_STATES.PLAYING) ? 'pause' : 'play';
@@ -158,6 +161,10 @@ function AudioPlayer() {
 
 //// HELPER COMPONENTS ////
 
+/**
+ * Button for skipping time forward/back (aka a relative seek)
+ * Calls onClick every REPEAT_RELATIVE_SEEK_FREQ milliseconds when held
+ */
 const RelativeSeekButton = observer(function RelativeSeekButton(
       props: {millisecondDelta: number, iconName: string, iconType: string, 
               onClick: (delta: number) => void}) {
@@ -180,28 +187,45 @@ const RelativeSeekButton = observer(function RelativeSeekButton(
 
 //// HELPERS ////
 
+function useMediaControlNotification(state: AudioPlayerState, playerStore: AudioPlayerStore,
+      onPlayPause: () => void, onRelativeSeek: (delta: number) => void) {
+  const notificationState = {
+    currentTime: state.currentTime,
+    playerState: playerStore.playerState,
+    title: playerStore.title,
+    duration: playerStore.isLoaded ? playerStore.player.duration : 0,
+    readyToUpdate: playerStore.isLoaded
+  };
+  const options = {
+    onPlayPause,
+    onRelativeSeek,
+    relativeSeekDelta: RELATIVE_SEEK_DELTA
+  };
+  _useMediaControlNotification(notificationState, options);
+}
+
 /**
  * Maps PLAYER_STATES enum values to STATE_* constants used by react-native-music-control
  */
-function musicControlStateConstant(playerState: PLAYER_STATES): any {
-  return (playerState == PLAYER_STATES.PLAYING) ? 
-      MusicControl.STATE_PLAYING : MusicControl.STATE_PAUSED;
-}
+// function musicControlStateConstant(playerState: PLAYER_STATES): any {
+//   return (playerState == PLAYER_STATES.PLAYING) ? 
+//       MusicControl.STATE_PLAYING : MusicControl.STATE_PAUSED;
+// }
 
-function updateMediaNotification(state: AudioPlayerState, playerStore: AudioPlayerStore) {
-  if (playerStore.isLoaded) {
-    MusicControl.setNowPlaying({
-      title: playerStore.title,
-      duration: playerStore.player.duration
-    });
+// function updateMediaNotification(state: AudioPlayerState, playerStore: AudioPlayerStore) {
+//   if (playerStore.isLoaded) {
+//     MusicControl.setNowPlaying({
+//       title: playerStore.title,
+//       duration: playerStore.player.duration
+//     });
     
-    MusicControl.updatePlayback({
-      state: musicControlStateConstant(playerStore.playerState),
-      elapsedTime: state.currentTime,
-      speed: 1
-    });
-  }
-}
+//     MusicControl.updatePlayback({
+//       state: musicControlStateConstant(playerStore.playerState),
+//       elapsedTime: state.currentTime,
+//       speed: 1
+//     });
+//   }
+// }
 
 function updateCurrentTime(state: AudioPlayerState, playerStore: AudioPlayerStore) {
   state.setCurrentTime(playerStore.player.currentTime);
@@ -228,7 +252,7 @@ async function selectFile(state: AudioPlayerState, playerStore: AudioPlayerStore
 /**
  * Polls for changes in playerStore's currentTime and updates components currentTime state
  */
-function useUpdateTimeEffect(state: AudioPlayerState, playerStore: AudioPlayerStore) {
+function useUpdateTime(state: AudioPlayerState, playerStore: AudioPlayerStore) {
   const [intervalId, setIntervalId] = useState<number>(null);
   useEffect(() => {
     console.log('[AudioPlayer$useUpdateTimeEffect] Running...');
@@ -258,33 +282,33 @@ function useUpdateTimeEffect(state: AudioPlayerState, playerStore: AudioPlayerSt
  * Initialise the a media control notification when the component is mounted.
  * @param onPlayPause Event handler for the play and pause button press events 
  */
-function useInitMediaNotificationEffect(onPlayPause: () => void, 
-    onRelativeSeek: (delta: number) => void) {
+// function useInitMediaNotificationEffect(onPlayPause: () => void, 
+//     onRelativeSeek: (delta: number) => void) {
   
-  useEffect(() => {
-    MusicControl.enableBackgroundMode(true);
+//   useEffect(() => {
+//     MusicControl.enableBackgroundMode(true);
 
-    MusicControl.enableControl('play', true);
-    MusicControl.enableControl('pause', true);
-    MusicControl.enableControl('skipForward', true, {interval: RELATIVE_SEEK_DELTA});
-    MusicControl.enableControl('skipBackward', true, {interval: RELATIVE_SEEK_DELTA});
+//     MusicControl.enableControl('play', true);
+//     MusicControl.enableControl('pause', true);
+//     MusicControl.enableControl('skipForward', true, {interval: RELATIVE_SEEK_DELTA});
+//     MusicControl.enableControl('skipBackward', true, {interval: RELATIVE_SEEK_DELTA});
 
-    MusicControl.on('play', () => {
-      onPlayPause();
-    });
+//     MusicControl.on('play', () => {
+//       onPlayPause();
+//     });
 
-    MusicControl.on('pause', () => {
-      onPlayPause();
-    });
+//     MusicControl.on('pause', () => {
+//       onPlayPause();
+//     });
 
-    MusicControl.on('skipForward', () => {
-      onRelativeSeek(RELATIVE_SEEK_DELTA);
-    });
+//     MusicControl.on('skipForward', () => {
+//       onRelativeSeek(RELATIVE_SEEK_DELTA);
+//     });
 
-    MusicControl.on('skipBackward', () => {
-      onRelativeSeek(-RELATIVE_SEEK_DELTA);
-    });
-  });
-}
+//     MusicControl.on('skipBackward', () => {
+//       onRelativeSeek(-RELATIVE_SEEK_DELTA);
+//     });
+//   });
+// }
 
 export default observer(AudioPlayer);
