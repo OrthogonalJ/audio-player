@@ -1,5 +1,7 @@
 import { observable, action, runInAction, IObservableValue, computed } from 'mobx';
 import { Player } from '@react-native-community/audio-toolkit';
+import { exists } from 'react-native-fs';
+
 import { PLAYER_STATES } from '../models/playerStates';
 import { TrackProgress } from '../models/trackProgress';
 import { IFile } from '../models/file';
@@ -8,6 +10,7 @@ import { TrackHistoryService } from '../services/trackHistoryService';
 import { getUriBaseName } from '../utils/fileUtils';
 import { promisify } from '../utils/promiseUtils';
 import { NoStoredDataError } from '../exceptions/noStoredDataError';
+import { FileNotFoundError } from '../exceptions/fileNotFoundError';
 
 export class AudioPlayerStore {
   @observable private _player: IObservableValue<Player> = observable.box(null);
@@ -16,34 +19,37 @@ export class AudioPlayerStore {
   @observable title: string = '';
   @observable isLoaded: boolean = false;
   
-  constructor() {
-    this.loadLastOpennedTrack();
-  }
-
   @action.bound
   async loadFile(file: IFile) {
-    console.log(`[AudioPlayerStore$loadFile] audio player store loading file: ${JSON.stringify(file)}`);
-    if (this.isLoaded) await this.reset();
+    try {
+      console.log(`[AudioPlayerStore$loadFile] audio player store loading file: ${JSON.stringify(file)}`);
+      if (this.isLoaded) await this.reset();
 
-    const player = new Player(file.uri, {
-      continuesToPlayInBackground: true, 
-      autoDestroy: false
-    });
-    player.on('ended', () => this.handleTrackEnded());
-    await promisify(player.prepare, player);
-    
-    const trackProgress = await TrackProgressService.getOrCreateTrackProgress(file.uri);
+      const player = new Player(file.uri, {
+        continuesToPlayInBackground: true, 
+        autoDestroy: false
+      });
+      player.on('ended', () => this.handleTrackEnded());
+      await promisify(player.prepare, player);
+      
+      const trackProgress = await TrackProgressService.getOrCreateTrackProgress(file.uri);
 
-    runInAction(() => {
-      this._player.set(player);
-      this.title = file.name;
-      this.playerState = PLAYER_STATES.PAUSED;
-      this._trackProgress.set(trackProgress);
-      this.isLoaded = true;
-    });
+      runInAction(() => {
+        this._player.set(player);
+        this.title = file.name;
+        this.playerState = PLAYER_STATES.PAUSED;
+        this._trackProgress.set(trackProgress);
+        this.isLoaded = true;
+      });
 
-    await this.seek(this.trackProgress.currentTime);
-    await TrackHistoryService.setLastTrack(this.trackProgress.uri);
+      await this.seek(this.trackProgress.currentTime);
+      await TrackHistoryService.setLastTrack(this.trackProgress.uri);
+    } catch (error) {
+      if (error.err && error.err === 'invalidpath') {
+        throw new FileNotFoundError(file.uri);
+      }
+      throw error;
+    }
   }
 
   @computed
@@ -62,7 +68,7 @@ export class AudioPlayerStore {
 
     await promisify(this.player.playPause, this.player);
     
-    // Using this is a natural opportunity to save the track progress
+    // Using this is as a natural opportunity to save the track progress
     await this.saveProgress();
 
     runInAction(() => {
@@ -100,7 +106,7 @@ export class AudioPlayerStore {
     await new Promise((resolve, reject) => {
       let newTime = this.player.currentTime + millisecondsDelta;
       newTime = Math.max(0, newTime);
-      newTime = Math.min(newTime, Math.max(this.player.duration, 0));
+      newTime = Math.min(newTime, Math.max(0, this.player.duration));
       this.player.seek(newTime, (error) => {
         if (error) {
           reject(error);
@@ -125,17 +131,10 @@ export class AudioPlayerStore {
   }
 
   @action.bound
-  private async loadLastOpennedTrack() {
-    try {
-      const uri = await TrackHistoryService.getLastTrack(); 
-      const fileName = getUriBaseName(uri);
-      this.loadFile({uri, name: fileName});
-    } catch (error) {
-      if (!(error instanceof NoStoredDataError)) {
-        console.error(error);
-        throw error;
-      }
-    }
+  async loadLastOpennedTrack() {
+    const uri = await TrackHistoryService.getLastTrack();
+    const fileName = getUriBaseName(uri);
+    await this.loadFile({uri, name: fileName});
   }
 
   @action.bound

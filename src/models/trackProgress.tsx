@@ -1,4 +1,6 @@
 import { observable } from 'mobx';
+import { hash } from 'react-native-fs';
+
 import { sha1Hash } from '../utils/hashUtils';
 
 export interface ITrackProgress {
@@ -42,12 +44,7 @@ export class TrackProgress implements ITrackProgress {
   }
 
   static async calcChecksum(uri: string): Promise<string> {
-    return uri;
-    // const statResult = await stat(uri);
-    // const checksum = await hash(statResult.originalFilepath, 'sha1');
-    // const trackData: string = await readFile(uri);
-    // const checksum = await sha1Hash(trackData);
-    // return checksum;
+    return await hash(uri, 'md5');
   }
 
   static async calcTrackId(uri: string, checksum: string): Promise<string> {

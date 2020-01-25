@@ -4,12 +4,16 @@ import { createStackNavigator } from 'react-navigation-stack';
 import AudioPlayer from './AudioPlayer';
 import StoresContext, { makeStoresContext, IStoresContext } from '../contexts/storesContext';
 import { PermissionService } from '../services/permissionsService';
+import { AudioPlayerStore } from '../stores/audioPlayerStore';
+import { FileNotFoundError } from '../exceptions/fileNotFoundError';
+import { NoStoredDataError } from '../exceptions/noStoredDataError';
 
 function App() {
   const [stores, setStores] = useState(makeStoresContext());
 
-  useSetupPermissionsEffect();
-  useAppOnCloseEffect(stores);
+  useSetupPermissions();
+  useLoadLastOpennedTrack(stores.audioPlayer);
+  useAppOnClose(stores);
 
   return (
     <StoresContext.Provider value={stores}>
@@ -18,13 +22,29 @@ function App() {
   );
 }
 
-function useSetupPermissionsEffect() {
+function useLoadLastOpennedTrack(playerStore: AudioPlayerStore) {
   useEffect(() => {
-    PermissionService.requestMissingBasePermissions();
-  });
+    (async () => {
+      try {
+        await playerStore.loadLastOpennedTrack();
+      } catch (error) {
+        if (!(error instanceof FileNotFoundError || error instanceof NoStoredDataError)) {
+          console.error('Error encountered during last openned track load: ', error);
+        } else {
+          console.log('Last track not found');
+        }
+      }
+    })();
+  }, []);
 }
 
-function useAppOnCloseEffect(stores: IStoresContext) {
+function useSetupPermissions() {
+  useEffect(() => {
+    PermissionService.requestMissingBasePermissions();
+  }, []);
+}
+
+function useAppOnClose(stores: IStoresContext) {
   useEffect(() => {
     return () => {
       // NOTE: this is async

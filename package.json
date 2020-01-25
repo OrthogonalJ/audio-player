@@ -17,7 +17,7 @@
     "@react-native-community/slider": "^2.0.8",
     "@tradle/react-native-http": "^2.0.0",
     "@types/moment": "^2.13.0",
-    "mobx": "^5.15.1",
+    "mobx": "^4.15.1",
     "mobx-react": "^6.1.4",
     "moment": "^2.24.0",
     "process": "^0.11.0",

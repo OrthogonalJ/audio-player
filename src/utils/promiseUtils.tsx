@@ -2,7 +2,6 @@ function promisifyImpl(fn: (cb: (err: any, value?: any) => void) => void): Promi
   return new Promise(function (resolve, reject) {
     fn(function(err, value: any) {
       if (err) {
-        console.error(err);
         reject(err);
         return;
       }
@@ -16,7 +15,6 @@ function promisifyWithContextImpl(fn: (cb: (err: any, value?: any) => void) => v
   return new Promise(function (resolve, reject) {
     fn.apply(context, [function(err, value: any) {
       if (err) {
-        console.error(err);
         reject(err);
         return;
       }
