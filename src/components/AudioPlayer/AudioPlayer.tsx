@@ -12,6 +12,7 @@ import { PLAYER_STATES } from '../../models/playerStates';
 import { AudioPlayerStore } from '../../stores/audioPlayerStore';
 
 import styles from './AudioPlayerStyles';
+import { createConfigItem } from '@babel/core';
 
 // All units in milliseconds
 const RELATIVE_SEEK_DELTA = 10000;
@@ -167,9 +168,12 @@ function updateCurrentTime(state: AudioPlayerState, playerStore: AudioPlayerStor
  */
 async function selectFile(state: AudioPlayerState, playerStore: AudioPlayerStore) {
   try {
+    console.log("Before Document pciker");
     const selectedFile = await DocumentPicker.pick({
       type: [DocumentPicker.types.audio]
     });
+    console.log("After Document picker");
+    console.log(selectedFile);
     const fileStats = await stat(selectedFile.uri);
     await playerStore.loadFile({uri: fileStats.originalFilepath, name: selectedFile.name});
     updateCurrentTime(state, playerStore);
