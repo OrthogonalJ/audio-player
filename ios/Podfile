@@ -2,11 +2,11 @@ platform :ios, '9.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 # For Expo
-require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
+#require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 
 target 'AudioPlayer' do
   # For Expo
-  use_unimodules!
+  #use_unimodules!
 
   # Pods for AudioPlayer
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"

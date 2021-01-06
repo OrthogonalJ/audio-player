@@ -1,7 +1,7 @@
 apply plugin: "com.android.application"
 
 // For Expo
-apply from: '../../node_modules/react-native-unimodules/gradle.groovy'
+//apply from: '../../node_modules/react-native-unimodules/gradle.groovy'
 
 import com.android.build.OutputFile
 
@@ -191,7 +191,7 @@ dependencies {
     // compile project(':reactnativenotifications')
 
     // For Expo
-    addUnimodulesDependencies([exclude: ['expo-face-detector', 'expo-barcode-scanner', 'expo-sensors']])
+    //addUnimodulesDependencies([exclude: ['expo-face-detector', 'expo-barcode-scanner', 'expo-sensors']])
 
     // END MANUALLY LINKED LIBRARIES
     

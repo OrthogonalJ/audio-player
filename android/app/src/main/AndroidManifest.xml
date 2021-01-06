@@ -8,12 +8,15 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- NOTE: android:requestLegacyExternalStorage="true" opts this app out of scopped storage.
+         This may not be supported beyond Android 11 (SDK 30) -->
     <application android:name=".MainApplication" 
             android:label="@string/app_name" 
             android:icon="@mipmap/ic_launcher" 
             android:roundIcon="@mipmap/ic_launcher_round" 
             android:allowBackup="false" 
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:requestLegacyExternalStorage="true">
         <activity android:name=".MainActivity" 
                 android:label="@string/app_name"
                 android:configChanges="keyboard|keyboardHidden|orientation|screenSize" 
