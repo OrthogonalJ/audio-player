@@ -12,7 +12,6 @@ import { PLAYER_STATES } from '../../models/playerStates';
 import { AudioPlayerStore } from '../../stores/audioPlayerStore';
 
 import styles from './AudioPlayerStyles';
-import { createConfigItem } from '@babel/core';
 
 // All units in milliseconds
 const RELATIVE_SEEK_DELTA = 10000;
