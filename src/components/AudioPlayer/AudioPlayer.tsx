@@ -3,13 +3,16 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { observer, useLocalStore } from 'mobx-react';
 import DocumentPicker from 'react-native-document-picker';
-import { stat } from 'react-native-fs';
+import { stat, DocumentDirectoryPath } from 'react-native-fs';
 
 import TimeSeekerInput from '../TimeSeekerInput/TimeSeekerInput';
+import MediaSelector from '../MediaSelector';
 import StoresContext from '../../contexts/storesContext';
 import { useMediaControlNotification as _useMediaControlNotification } from '../../hooks/mediaControlNotificationHooks';
 import { PLAYER_STATES } from '../../models/playerStates';
 import { AudioPlayerStore } from '../../stores/audioPlayerStore';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 
 import styles from './AudioPlayerStyles';
 
@@ -21,8 +24,10 @@ const UPDATE_TIME_FREQ = 100;
 interface AudioPlayerState {
   currentTime: number;
   isSeeking: boolean;
+  isSelectFileModalVisible: boolean;
   setCurrentTime(currentTime: number): void;
   setIsSeeking(value: boolean): void;
+  setIsSelectFileModalVisible(value: boolean): void;
 }
 
 function AudioPlayer() {
@@ -30,15 +35,18 @@ function AudioPlayer() {
   const state = useLocalStore<AudioPlayerState>(() => ({
     currentTime: 0,
     isSeeking: false,
+    isSelectFileModalVisible: false,
     setCurrentTime(currentTime: number) { state.currentTime = currentTime; },
-    setIsSeeking(value: boolean) { state.isSeeking = value; }
+    setIsSeeking(value: boolean) { state.isSeeking = value; },
+    setIsSelectFileModalVisible(value: boolean) { state.isSelectFileModalVisible = value; }
   }));
 
 
   //// EVENT HANDLERS ////
 
   const onPickFileBtnClicked = async () => {
-    await selectFile(state, playerStore);
+    //await selectFile(state, playerStore);
+    state.setIsSelectFileModalVisible(true);
   };
 
   const onPlayPauseBtnClicked = useCallback(async () => { 
@@ -65,6 +73,11 @@ function AudioPlayer() {
     await playerStore.relativeSeek(millisecondDelta);
   }, []);
 
+  const onFileSelected = useCallback(async (track: MediaLibrary.Asset) => {
+    state.setIsSelectFileModalVisible(false);
+    await playerStore.loadFile({uri: track.uri, name: track.filename});
+  }, [state, playerStore]);
+
 
   //// SETUP EFFECTS ////
 
@@ -79,6 +92,10 @@ function AudioPlayer() {
   const title = (playerStore.isLoaded) ? playerStore.title : 'Select a track';
   return (
     <View style={styles.mainContainer}>
+      <MediaSelector 
+        isVisible={state.isSelectFileModalVisible}
+        onSelected={(track: MediaLibrary.Asset) => onFileSelected(track)}
+      />
       <View style={styles.title}>
         <Text onPress={onPickFileBtnClicked}>{title}</Text>
       </View>
@@ -167,15 +184,29 @@ function updateCurrentTime(state: AudioPlayerState, playerStore: AudioPlayerStor
  */
 async function selectFile(state: AudioPlayerState, playerStore: AudioPlayerStore) {
   try {
-    console.log("Before Document pciker");
-    const selectedFile = await DocumentPicker.pick({
-      type: [DocumentPicker.types.audio]
-    });
-    console.log("After Document picker");
-    console.log(selectedFile);
-    const fileStats = await stat(selectedFile.uri);
-    await playerStore.loadFile({uri: fileStats.originalFilepath, name: selectedFile.name});
-    updateCurrentTime(state, playerStore);
+
+    //console.log("Before Document pciker");
+    //const selectedFile = await DocumentPicker.pick({
+    //  type: [DocumentPicker.types.audio]
+    //});
+    //console.log("After Document picker");
+    //console.log(selectedFile);
+
+    //const result = await MediaLibrary.getAssetsAsync({mediaType: MediaLibrary.MediaType.audio});
+    //console.log(result);
+
+    //console.log('DocumentDirectoryPath: ' + DocumentDirectoryPath);
+
+    //console.log(await FileSystem.getInfoAsync(selectedFile.uri));
+
+    ////const fileStats = await stat(selectedFile.uri);
+    ////console.log('filestats');
+    ////console.log(fileStats);
+
+    //await playerStore.loadFile({uri: selectedFile.uri, name: selectedFile.name});
+    ////await playerStore.loadFile({uri: fileStats.originalFilepath, name: selectedFile.name});
+
+    //updateCurrentTime(state, playerStore);
   } catch (error) {
     if (!DocumentPicker.isCancel(error)) {
       throw error;

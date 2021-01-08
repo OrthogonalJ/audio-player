@@ -1,10 +1,14 @@
 import { PermissionsAndroid, Permission } from 'react-native';
 
 export class PermissionService {
-  static readonly BASE_PERMISSIONS: Permission[] = [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
+  static readonly BASE_PERMISSIONS: Permission[] = [
+    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+  ];
   
   static async requestMissingBasePermissions() {
     const missingPermissions: Permission[] = await PermissionService.getMissingBasePermissions();
+    console.log(JSON.missingPermissions);
     if (missingPermissions.length === 0) return;
     const results = await PermissionsAndroid.requestMultiple(missingPermissions);
     console.log('PERMISSION REQUEST RESULT:');

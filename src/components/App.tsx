@@ -40,6 +40,7 @@ function useLoadLastOpennedTrack(playerStore: AudioPlayerStore) {
 
 function useSetupPermissions() {
   useEffect(() => {
+    console.log('useSetupPermissions running...');
     PermissionService.requestMissingBasePermissions();
   }, []);
 }
