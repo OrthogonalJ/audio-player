@@ -12,8 +12,6 @@ import com.facebook.react.ReactPackage;
 import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-// https://github.com/react-native-community/react-native-audio-toolkit/blob/master/docs/SETUP.md
-import com.reactnativecommunity.rctaudiotoolkit.AudioPackage;
 
 // For Expo
 import java.util.Arrays;
@@ -39,10 +37,7 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
-
-          // https://github.com/react-native-community/react-native-audio-toolkit/blob/master/docs/SETUP.md
-          // new AudioPackage();
- 
+          
           // For Expo
           List<ReactPackage> unimodules = Arrays.<ReactPackage>asList(
             new ModuleRegistryAdapter(mModuleRegistryProvider)
