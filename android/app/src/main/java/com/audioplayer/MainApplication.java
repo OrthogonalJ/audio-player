@@ -14,8 +14,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 // https://github.com/react-native-community/react-native-audio-toolkit/blob/master/docs/SETUP.md
 import com.reactnativecommunity.rctaudiotoolkit.AudioPackage;
-// https://github.com/wix/react-native-notifications/blob/master/docs/installation.md
-// import com.wix.reactnativenotifications.RNNotificationsPackage;
 
 // For Expo
 import java.util.Arrays;
@@ -43,11 +41,8 @@ public class MainApplication extends Application implements ReactApplication {
           // packages.add(new MyReactNativePackage());
 
           // https://github.com/react-native-community/react-native-audio-toolkit/blob/master/docs/SETUP.md
-          new AudioPackage();
-
-          // https://github.com/wix/react-native-notifications/issues/236#issuecomment-402564640
-          // packages.add(new RNNotificationsPackage(MainApplication.this));
-          
+          // new AudioPackage();
+ 
           // For Expo
           List<ReactPackage> unimodules = Arrays.<ReactPackage>asList(
             new ModuleRegistryAdapter(mModuleRegistryProvider)

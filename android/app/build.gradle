@@ -187,11 +187,10 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
 
     // START MANUALLY LINKED LIBRARIES
-    implementation project(':@react-native-community_audio-toolkit')
-    // compile project(':reactnativenotifications')
+    //implementation project(':@react-native-community_audio-toolkit')
 
     // For Expo
-    addUnimodulesDependencies([exclude: ['expo-face-detector', 'expo-barcode-scanner', 'expo-sensors']])
+    addUnimodulesDependencies([exclude: ['expo-face-detector', 'expo-barcode-scanner', 'expo-sensors', 'unimodules-face-detector-interface', 'unimodules-barcode-scanner-interface', 'unimodules-sensors-interface']])
 
     // END MANUALLY LINKED LIBRARIES
     
