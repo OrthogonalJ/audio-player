@@ -1,5 +1,8 @@
 package com.audioplayer;
 
+// For Expo
+import com.audioplayer.generated.BasePackageList;
+
 import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
@@ -14,7 +17,16 @@ import com.reactnativecommunity.rctaudiotoolkit.AudioPackage;
 // https://github.com/wix/react-native-notifications/blob/master/docs/installation.md
 // import com.wix.reactnativenotifications.RNNotificationsPackage;
 
+// For Expo
+import java.util.Arrays;
+import org.unimodules.adapters.react.ModuleRegistryAdapter;
+import org.unimodules.adapters.react.ReactModuleRegistryProvider;
+import org.unimodules.core.interfaces.SingletonModule;
+
 public class MainApplication extends Application implements ReactApplication {
+
+  // For Expo
+  private final ReactModuleRegistryProvider mModuleRegistryProvider = new ReactModuleRegistryProvider(new BasePackageList().getPackageList(), null);
 
   private final ReactNativeHost mReactNativeHost =
       new ReactNativeHost(this) {
@@ -36,6 +48,12 @@ public class MainApplication extends Application implements ReactApplication {
           // https://github.com/wix/react-native-notifications/issues/236#issuecomment-402564640
           // packages.add(new RNNotificationsPackage(MainApplication.this));
           
+          // For Expo
+          List<ReactPackage> unimodules = Arrays.<ReactPackage>asList(
+            new ModuleRegistryAdapter(mModuleRegistryProvider)
+          );
+          packages.addAll(unimodules);
+
           return packages;
         }
 

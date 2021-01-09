@@ -30,7 +30,9 @@ export class AudioPlayerStore {
         autoDestroy: false
       });
       player.on('ended', () => this.handleTrackEnded());
+      console.log('Preparing player...');
       await promisify(player.prepare, player);
+      console.log('Done Preparing player...');
       
       const trackProgress = await TrackProgressService.getOrCreateTrackProgress(file.uri);
 
@@ -128,6 +130,17 @@ export class AudioPlayerStore {
         this._trackProgress.set(null);
       });
     }
+  }
+
+  @action.bound
+  async hardReset() {
+    runInAction(() => {
+      this.isLoaded = false;
+      this._player.set(null);
+      this.playerState = PLAYER_STATES.PAUSED;
+      this._trackProgress.set(null);
+      this.title = null;
+    });
   }
 
   @action.bound
