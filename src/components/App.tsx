@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import AudioPlayer from './AudioPlayer';
+import DefaultErrorBoundary from './DefaultErrorBoundary';
 import StoresContext, { makeStoresContext, IStoresContext } from '../contexts/storesContext';
 import { PermissionService } from '../services/permissionsService';
 import { AudioPlayerStore } from '../stores/audioPlayerStore';
@@ -17,7 +18,9 @@ function App() {
 
   return (
     <StoresContext.Provider value={stores}>
-      <AudioPlayer/>
+      <DefaultErrorBoundary>
+        <AudioPlayer/>
+      </DefaultErrorBoundary>
     </StoresContext.Provider>
   );
 }
@@ -29,6 +32,7 @@ function useLoadLastOpennedTrack(playerStore: AudioPlayerStore) {
         await playerStore.loadLastOpennedTrack();
       } catch (error) {
         if (!(error instanceof FileNotFoundError || error instanceof NoStoredDataError)) {
+          await playerStore.hardReset();
           console.error('Error encountered during last openned track load: ', error);
         } else {
           console.log('Last track not found');
@@ -40,6 +44,7 @@ function useLoadLastOpennedTrack(playerStore: AudioPlayerStore) {
 
 function useSetupPermissions() {
   useEffect(() => {
+    console.log('useSetupPermissions running...');
     PermissionService.requestMissingBasePermissions();
   }, []);
 }
