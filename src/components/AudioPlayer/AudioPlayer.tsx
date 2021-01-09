@@ -2,17 +2,14 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { observer, useLocalStore } from 'mobx-react';
-import DocumentPicker from 'react-native-document-picker';
-import { stat, DocumentDirectoryPath } from 'react-native-fs';
 
 import TimeSeekerInput from '../TimeSeekerInput/TimeSeekerInput';
-import MediaSelector from '../MediaSelector';
+import MediaSelectorModal from '../MediaSelectorModal';
 import StoresContext from '../../contexts/storesContext';
 import { useMediaControlNotification as _useMediaControlNotification } from '../../hooks/mediaControlNotificationHooks';
 import { PLAYER_STATES } from '../../models/playerStates';
 import { AudioPlayerStore } from '../../stores/audioPlayerStore';
 import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
 
 import styles from './AudioPlayerStyles';
 
@@ -44,39 +41,42 @@ function AudioPlayer() {
 
   //// EVENT HANDLERS ////
 
-  const onPickFileBtnClicked = async () => {
-    //await selectFile(state, playerStore);
+  const onPickFileBtnClicked = useCallback(async () => {
     state.setIsSelectFileModalVisible(true);
-  };
-
-  const onPlayPauseBtnClicked = useCallback(async () => { 
-    await playerStore.playPause();
-  }, []);
-
-  const onSeekerValueChange = async (milliseconds: number) => {
-    const shouldChangeSeekingFlag = !state.isSeeking;
-    if (shouldChangeSeekingFlag) state.setIsSeeking(true);
-    await playerStore.seek(milliseconds);
-    updateCurrentTime(state, playerStore);
-    if (shouldChangeSeekingFlag) state.setIsSeeking(false);
-  };
-
-  const onSeekerSlidingStart = (milliseconds: number) => {
-    state.setIsSeeking(true);
-  }
-
-  const onSeekerSlidingComplete = (milliseconds: number) => {
-    state.setIsSeeking(false);
-  }
-
-  const onRelativeSeek = useCallback(async (millisecondDelta: number) => {
-    await playerStore.relativeSeek(millisecondDelta);
   }, []);
 
   const onFileSelected = useCallback(async (track: MediaLibrary.Asset) => {
     state.setIsSelectFileModalVisible(false);
     await playerStore.loadFile({uri: track.uri, name: track.filename});
-  }, [state, playerStore]);
+  }, []);
+
+  const onCloseSelectFileModal = useCallback(() => {
+    state.setIsSelectFileModalVisible(false)
+  }, []);
+
+  const onPlayPauseBtnClicked = useCallback(async () => { 
+    await playerStore.playPause();
+  }, []);
+
+  const onSeekerValueChange = useCallback(async (milliseconds: number) => {
+    const shouldChangeSeekingFlag = !state.isSeeking;
+    if (shouldChangeSeekingFlag) state.setIsSeeking(true);
+    await playerStore.seek(milliseconds);
+    updateCurrentTime(state, playerStore);
+    if (shouldChangeSeekingFlag) state.setIsSeeking(false);
+  }, []);
+
+  const onSeekerSlidingStart = useCallback((milliseconds: number) => {
+    state.setIsSeeking(true);
+  }, []);
+
+  const onSeekerSlidingComplete = useCallback((milliseconds: number) => {
+    state.setIsSeeking(false);
+  }, []);
+
+  const onRelativeSeek = useCallback(async (millisecondDelta: number) => {
+    await playerStore.relativeSeek(millisecondDelta);
+  }, []);
 
 
   //// SETUP EFFECTS ////
@@ -92,9 +92,10 @@ function AudioPlayer() {
   const title = (playerStore.isLoaded) ? playerStore.title : 'Select a track';
   return (
     <View style={styles.mainContainer}>
-      <MediaSelector 
+      <MediaSelectorModal 
         isVisible={state.isSelectFileModalVisible}
-        onSelected={(track: MediaLibrary.Asset) => onFileSelected(track)}
+        onSelected={onFileSelected}
+        onClose={onCloseSelectFileModal}
       />
       <View style={styles.title}>
         <Text onPress={onPickFileBtnClicked}>{title}</Text>
@@ -156,6 +157,7 @@ const RelativeSeekButton = observer(function RelativeSeekButton(
   );
 });
 
+
 //// HELPERS ////
 
 function useMediaControlNotification(state: AudioPlayerState, playerStore: AudioPlayerStore,
@@ -177,41 +179,6 @@ function useMediaControlNotification(state: AudioPlayerState, playerStore: Audio
 
 function updateCurrentTime(state: AudioPlayerState, playerStore: AudioPlayerStore) {
   state.setCurrentTime(playerStore.player.currentTime);
-}
-
-/**
- * Prompt user for audio file (using system's file dialog) and load the file for playback
- */
-async function selectFile(state: AudioPlayerState, playerStore: AudioPlayerStore) {
-  try {
-
-    //console.log("Before Document pciker");
-    //const selectedFile = await DocumentPicker.pick({
-    //  type: [DocumentPicker.types.audio]
-    //});
-    //console.log("After Document picker");
-    //console.log(selectedFile);
-
-    //const result = await MediaLibrary.getAssetsAsync({mediaType: MediaLibrary.MediaType.audio});
-    //console.log(result);
-
-    //console.log('DocumentDirectoryPath: ' + DocumentDirectoryPath);
-
-    //console.log(await FileSystem.getInfoAsync(selectedFile.uri));
-
-    ////const fileStats = await stat(selectedFile.uri);
-    ////console.log('filestats');
-    ////console.log(fileStats);
-
-    //await playerStore.loadFile({uri: selectedFile.uri, name: selectedFile.name});
-    ////await playerStore.loadFile({uri: fileStats.originalFilepath, name: selectedFile.name});
-
-    //updateCurrentTime(state, playerStore);
-  } catch (error) {
-    if (!DocumentPicker.isCancel(error)) {
-      throw error;
-    }
-  }
 }
 
 /**
