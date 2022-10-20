@@ -33,7 +33,7 @@
     "react-native-notifications": "^2.0.6",
     "react-native-push-notification": "^3.1.9",
     "react-native-randombytes": "^3.5.3",
-    "react-native-reanimated": "^1.4.0",
+    "react-native-reanimated": "^2.10.0",
     "react-native-screens": "^1.0.0-alpha.23",
     "react-native-sha1": "^1.2.3",
     "react-native-unimodules": "^0.12.0",
